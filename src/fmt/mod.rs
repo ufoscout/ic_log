@@ -44,7 +44,7 @@ pub use self::writer::glob::*;
 use self::writer::{Buffer, Writer};
 
 pub(crate) mod glob {
-    pub use super::{Target, TimestampPrecision, WriteStyle};
+    pub use super::{Target, TimestampPrecision};
 }
 
 /// Formatting precision of timestamps.
@@ -94,19 +94,13 @@ impl Default for TimestampPrecision {
 /// [`style`]: #method.style
 pub struct Formatter {
     buf: Rc<RefCell<Buffer>>,
-    write_style: WriteStyle,
 }
 
 impl Formatter {
     pub(crate) fn new(writer: &Writer) -> Self {
         Formatter {
             buf: Rc::new(RefCell::new(writer.buffer())),
-            write_style: writer.write_style(),
         }
-    }
-
-    pub(crate) fn write_style(&self) -> WriteStyle {
-        self.write_style
     }
 
     pub(crate) fn print(&self, writer: &Writer) -> io::Result<()> {
@@ -393,7 +387,6 @@ mod tests {
     #[test]
     fn format_with_header() {
         let writer = writer::Builder::new()
-            .write_style(WriteStyle::Never)
             .build();
 
         let mut f = Formatter::new(&writer);
@@ -415,7 +408,6 @@ mod tests {
     #[test]
     fn format_no_header() {
         let writer = writer::Builder::new()
-            .write_style(WriteStyle::Never)
             .build();
 
         let mut f = Formatter::new(&writer);
@@ -437,7 +429,6 @@ mod tests {
     #[test]
     fn format_indent_spaces() {
         let writer = writer::Builder::new()
-            .write_style(WriteStyle::Never)
             .build();
 
         let mut f = Formatter::new(&writer);
@@ -459,7 +450,6 @@ mod tests {
     #[test]
     fn format_indent_zero_spaces() {
         let writer = writer::Builder::new()
-            .write_style(WriteStyle::Never)
             .build();
 
         let mut f = Formatter::new(&writer);
@@ -481,7 +471,6 @@ mod tests {
     #[test]
     fn format_indent_spaces_no_header() {
         let writer = writer::Builder::new()
-            .write_style(WriteStyle::Never)
             .build();
 
         let mut f = Formatter::new(&writer);
@@ -503,7 +492,6 @@ mod tests {
     #[test]
     fn format_suffix() {
         let writer = writer::Builder::new()
-            .write_style(WriteStyle::Never)
             .build();
 
         let mut f = Formatter::new(&writer);
@@ -525,7 +513,6 @@ mod tests {
     #[test]
     fn format_suffix_with_indent() {
         let writer = writer::Builder::new()
-            .write_style(WriteStyle::Never)
             .build();
 
         let mut f = Formatter::new(&writer);
@@ -547,7 +534,6 @@ mod tests {
     #[test]
     fn format_target() {
         let writer = writer::Builder::new()
-            .write_style(WriteStyle::Never)
             .build();
 
         let mut f = Formatter::new(&writer);
@@ -572,7 +558,6 @@ mod tests {
     #[test]
     fn format_empty_target() {
         let writer = writer::Builder::new()
-            .write_style(WriteStyle::Never)
             .build();
 
         let mut f = Formatter::new(&writer);
@@ -594,7 +579,6 @@ mod tests {
     #[test]
     fn format_no_target() {
         let writer = writer::Builder::new()
-            .write_style(WriteStyle::Never)
             .build();
 
         let mut f = Formatter::new(&writer);

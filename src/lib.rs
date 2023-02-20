@@ -49,7 +49,7 @@ pub struct Logger {
 /// use env_logger::Builder;
 /// use log::LevelFilter;
 ///
-/// let mut builder = Builder::from_default_env();
+/// let mut builder = Builder::new();
 ///
 /// builder
 ///     .format(|buf, record| writeln!(buf, "{} - {}", record.level(), record.args()))
@@ -80,13 +80,12 @@ impl Builder {
     ///
     /// ```
     /// use log::LevelFilter;
-    /// use env_logger::{Builder, WriteStyle};
+    /// use env_logger::Builder;
     ///
     /// let mut builder = Builder::new();
     ///
     /// builder
     ///     .filter(None, LevelFilter::Info)
-    ///     .write_style(WriteStyle::Always)
     ///     .init();
     /// ```
     ///
@@ -287,36 +286,6 @@ impl Builder {
         self
     }
 
-    /// Sets whether or not styles will be written.
-    ///
-    /// This can be useful in environments that don't support control characters
-    /// for setting colors.
-    ///
-    /// # Examples
-    ///
-    /// Never attempt to write styles:
-    ///
-    /// ```
-    /// use env_logger::{Builder, WriteStyle};
-    ///
-    /// let mut builder = Builder::new();
-    ///
-    /// builder.write_style(WriteStyle::Never);
-    /// ```
-    pub fn write_style(&mut self, write_style: fmt::WriteStyle) -> &mut Self {
-        self.writer.write_style(write_style);
-        self
-    }
-
-    /// Parses whether or not to write styles in the same form as the `RUST_LOG_STYLE`
-    /// environment variable.
-    ///
-    /// See the module documentation for more details.
-    pub fn parse_write_style(&mut self, write_style: &str) -> &mut Self {
-        self.writer.parse_write_style(write_style);
-        self
-    }
-
     /// Sets whether or not the logger will be used in unit tests.
     ///
     /// If `is_test` is `true` then the logger will allow the testing framework to
@@ -427,12 +396,6 @@ impl Log for Logger {
                         Ok(mut tl_buf) => match *tl_buf {
                             // We have a previously set formatter
                             Some(ref mut formatter) => {
-                                // Check the buffer style. If it's different from the logger's
-                                // style then drop the buffer and recreate it.
-                                if formatter.write_style() != self.writer.write_style() {
-                                    *formatter = Formatter::new(&self.writer);
-                                }
-
                                 print(formatter, record);
                             }
                             // We don't have a previously set formatter

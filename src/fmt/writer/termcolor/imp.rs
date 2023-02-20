@@ -1,6 +1,6 @@
 use std::io;
 
-use crate::fmt::{WritableTarget, WriteStyle};
+use crate::fmt::{WritableTarget};
 
 pub(in crate::fmt::writer) mod glob {}
 
@@ -11,13 +11,13 @@ pub(in crate::fmt::writer) struct BufferWriter {
 pub(in crate::fmt) struct Buffer(Vec<u8>);
 
 impl BufferWriter {
-    pub(in crate::fmt::writer) fn stderr(_is_test: bool, _write_style: WriteStyle) -> Self {
+    pub(in crate::fmt::writer) fn stderr(_is_test: bool) -> Self {
         BufferWriter {
             target: WritableTarget::Stderr,
         }
     }
 
-    pub(in crate::fmt::writer) fn stdout(_is_test: bool, _write_style: WriteStyle) -> Self {
+    pub(in crate::fmt::writer) fn stdout(_is_test: bool) -> Self {
         BufferWriter {
             target: WritableTarget::Stdout,
         }

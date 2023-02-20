@@ -1,7 +1,5 @@
-mod atty;
 mod termcolor;
 
-use self::atty::{is_stderr, is_stdout};
 use self::termcolor::BufferWriter;
 use std::{fmt, io, mem};
 
@@ -76,33 +74,13 @@ impl fmt::Debug for WritableTarget {
         )
     }
 }
-/// Whether or not to print styles to the target.
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub enum WriteStyle {
-    /// Try to print styles, but don't force the issue.
-    Auto,
-    /// Try very hard to print styles.
-    Always,
-    /// Never print styles.
-    Never,
-}
-
-impl Default for WriteStyle {
-    fn default() -> Self {
-        WriteStyle::Auto
-    }
-}
 
 /// A terminal target with color awareness.
 pub(crate) struct Writer {
     inner: BufferWriter,
-    write_style: WriteStyle,
 }
 
 impl Writer {
-    pub fn write_style(&self) -> WriteStyle {
-        self.write_style
-    }
 
     pub(super) fn buffer(&self) -> Buffer {
         self.inner.buffer()
@@ -119,7 +97,6 @@ impl Writer {
 #[derive(Debug)]
 pub(crate) struct Builder {
     target: WritableTarget,
-    write_style: WriteStyle,
     is_test: bool,
     built: bool,
 }
@@ -129,7 +106,6 @@ impl Builder {
     pub(crate) fn new() -> Self {
         Builder {
             target: Default::default(),
-            write_style: Default::default(),
             is_test: false,
             built: false,
         }
@@ -138,21 +114,6 @@ impl Builder {
     /// Set the target to write to.
     pub(crate) fn target(&mut self, target: Target) -> &mut Self {
         self.target = target.into();
-        self
-    }
-
-    /// Parses a style choice string.
-    ///
-    /// See the [Disabling colors] section for more details.
-    ///
-    /// [Disabling colors]: ../index.html#disabling-colors
-    pub(crate) fn parse_write_style(&mut self, write_style: &str) -> &mut Self {
-        self.write_style(parse_write_style(write_style))
-    }
-
-    /// Whether or not to print style characters when writing.
-    pub(crate) fn write_style(&mut self, write_style: WriteStyle) -> &mut Self {
-        self.write_style = write_style;
         self
     }
 
@@ -168,28 +129,13 @@ impl Builder {
         assert!(!self.built, "attempt to re-use consumed builder");
         self.built = true;
 
-        let color_choice = match self.write_style {
-            WriteStyle::Auto => {
-                if match &self.target {
-                    WritableTarget::Stderr => is_stderr(),
-                    WritableTarget::Stdout => is_stdout(),
-                } {
-                    WriteStyle::Auto
-                } else {
-                    WriteStyle::Never
-                }
-            }
-            color_choice => color_choice,
-        };
-
         let writer = match mem::take(&mut self.target) {
-            WritableTarget::Stderr => BufferWriter::stderr(self.is_test, color_choice),
-            WritableTarget::Stdout => BufferWriter::stdout(self.is_test, color_choice),
+            WritableTarget::Stderr => BufferWriter::stderr(self.is_test),
+            WritableTarget::Stdout => BufferWriter::stdout(self.is_test),
         };
 
         Writer {
             inner: writer,
-            write_style: self.write_style,
         }
     }
 }
@@ -203,41 +149,5 @@ impl Default for Builder {
 impl fmt::Debug for Writer {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Writer").finish()
-    }
-}
-
-fn parse_write_style(spec: &str) -> WriteStyle {
-    match spec {
-        "auto" => WriteStyle::Auto,
-        "always" => WriteStyle::Always,
-        "never" => WriteStyle::Never,
-        _ => Default::default(),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn parse_write_style_valid() {
-        let inputs = vec![
-            ("auto", WriteStyle::Auto),
-            ("always", WriteStyle::Always),
-            ("never", WriteStyle::Never),
-        ];
-
-        for (input, expected) in inputs {
-            assert_eq!(expected, parse_write_style(input));
-        }
-    }
-
-    #[test]
-    fn parse_write_style_invalid() {
-        let inputs = vec!["", "true", "false", "NEVER!!"];
-
-        for input in inputs {
-            assert_eq!(WriteStyle::Auto, parse_write_style(input));
-        }
     }
 }
