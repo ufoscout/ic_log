@@ -4,8 +4,7 @@ use log::{LevelFilter, Log, Metadata, Record, SetLoggerError};
 
 pub mod filter;
 pub mod fmt;
-
-pub use self::fmt::glob::*;
+mod platform;
 
 use self::filter::Filter;
 use self::fmt::writer::{self, Writer};
@@ -162,32 +161,6 @@ impl Builder {
         self
     }
 
-    /// Configures if timestamp should be included and in what precision.
-    pub fn format_timestamp(&mut self, timestamp: Option<fmt::TimestampPrecision>) -> &mut Self {
-        self.format.format_timestamp = timestamp;
-        self
-    }
-
-    /// Configures the timestamp to use second precision.
-    pub fn format_timestamp_secs(&mut self) -> &mut Self {
-        self.format_timestamp(Some(fmt::TimestampPrecision::Seconds))
-    }
-
-    /// Configures the timestamp to use millisecond precision.
-    pub fn format_timestamp_millis(&mut self) -> &mut Self {
-        self.format_timestamp(Some(fmt::TimestampPrecision::Millis))
-    }
-
-    /// Configures the timestamp to use microsecond precision.
-    pub fn format_timestamp_micros(&mut self) -> &mut Self {
-        self.format_timestamp(Some(fmt::TimestampPrecision::Micros))
-    }
-
-    /// Configures the timestamp to use nanosecond precision.
-    pub fn format_timestamp_nanos(&mut self) -> &mut Self {
-        self.format_timestamp(Some(fmt::TimestampPrecision::Nanos))
-    }
-
     /// Configures the end of line suffix.
     pub fn format_suffix(&mut self, suffix: &'static str) -> &mut Self {
         self.format.format_suffix = suffix;
@@ -260,29 +233,6 @@ impl Builder {
     /// See the module documentation for more details.
     pub fn parse_filters(&mut self, filters: &str) -> &mut Self {
         self.filter.parse(filters);
-        self
-    }
-
-    /// Sets the target for the log output.
-    ///
-    /// Env logger can log to either stdout, stderr or a custom pipe. The default is stderr.
-    ///
-    /// The custom pipe can be used to send the log messages to a custom sink (for example a file).
-    /// Do note that direct writes to a file can become a bottleneck due to IO operation times.
-    ///
-    /// # Examples
-    ///
-    /// Write log message to `stdout`:
-    ///
-    /// ```
-    /// use ic_log::{Builder, Target};
-    ///
-    /// let mut builder = Builder::new();
-    ///
-    /// builder.target(Target::Stdout);
-    /// ```
-    pub fn target(&mut self, target: fmt::Target) -> &mut Self {
-        self.writer.target(target);
         self
     }
 
@@ -444,3 +394,17 @@ mod std_fmt_impls {
     }
 }
 
+#[cfg(test)]
+mod tests {
+
+    use log::info;
+
+    use super::*;
+
+    #[test]
+    fn filter_info() {
+        Builder::default().filter_level(LevelFilter::Debug).try_init().unwrap();
+        info!("hello from ic")
+    }
+
+}

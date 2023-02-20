@@ -5,7 +5,7 @@ description = """
 A logging implementation for `log` in IC
 """
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/rust-cli/ic_log/"
+repository = "https://github.com/ufoscout/ic_log/"
 categories = ["development-tools::debugging"]
 keywords = ["logging", "log", "logger", "internet-computer"]
 edition = "2021"
@@ -13,3 +13,12 @@ rust-version = "1.60.0"
 
 [dependencies]
 log = { version = "0.4.8", features = ["std"] }
+ic-cdk = "0.7.0"
+
+# Enables rfc3339 time format in logs
+# Without this, timestamps will be printed as timestamp in nanoseconds
+chrono = { version = "0.4", default-features = false, features = ["std"], optional = true }
+
+[features]
+default = ["chrono"]
+chrono = ["dep:chrono"]

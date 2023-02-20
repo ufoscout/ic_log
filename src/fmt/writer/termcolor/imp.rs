@@ -1,25 +1,15 @@
 use std::io;
 
-use crate::fmt::{WritableTarget};
-
-pub(in crate::fmt::writer) mod glob {}
+use crate::platform;
 
 pub(in crate::fmt::writer) struct BufferWriter {
-    target: WritableTarget,
 }
 
 pub(in crate::fmt) struct Buffer(Vec<u8>);
 
 impl BufferWriter {
-    pub(in crate::fmt::writer) fn stderr() -> Self {
-        BufferWriter {
-            target: WritableTarget::Stderr,
-        }
-    }
-
-    pub(in crate::fmt::writer) fn stdout() -> Self {
-        BufferWriter {
-            target: WritableTarget::Stdout,
+    pub(in crate::fmt::writer) fn new() -> Self {
+        Self {
         }
     }
 
@@ -28,15 +18,7 @@ impl BufferWriter {
     }
 
     pub(in crate::fmt::writer) fn print(&self, buf: &Buffer) -> io::Result<()> {
-        // This impl uses the `eprint` and `print` macros
-        // instead of using the streams directly.
-        // This is so their output can be captured by `cargo test`.
-        match &self.target {
-            // Safety: If the target type is `Pipe`, `target_pipe` will always be non-empty.
-            WritableTarget::Stdout => print!("{}", String::from_utf8_lossy(&buf.0)),
-            WritableTarget::Stderr => eprint!("{}", String::from_utf8_lossy(&buf.0)),
-        }
-
+        platform::print(&buf.0);
         Ok(())
     }
 }

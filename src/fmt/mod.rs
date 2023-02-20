@@ -39,13 +39,10 @@ use log::Record;
 
 pub(crate) mod writer;
 
-pub use self::writer::glob::*;
+use crate::platform;
 
 use self::writer::{Buffer, Writer};
 
-pub(crate) mod glob {
-    pub use super::{Target, TimestampPrecision};
-}
 
 /// Formatting precision of timestamps.
 ///
@@ -79,7 +76,7 @@ impl Default for TimestampPrecision {
 /// # Examples
 ///
 /// Use the [`writeln`] macro to format a log record.
-/// An instance of a `Formatter` is passed to an `ic_log` format as `buf`:
+/// An instance of a `Formatter` is passed to an `env_logger` format as `buf`:
 ///
 /// ```
 /// use std::io::Write;
@@ -256,11 +253,30 @@ impl<'a> DefaultFormat<'a> {
     }
 
     fn write_timestamp(&mut self) -> io::Result<()> {
+        
+        if self.timestamp.is_none() {
+            return Ok(())
+        }
+
+        let timestamp_as_nanos = platform::time_secs();
+        #[cfg(feature = "chrono")]
         {
-            // Trick the compiler to think we have used self.timestamp
-            // Workaround for "field is never used: `timestamp`" compiler nag.
-            let _ = self.timestamp;
-            Ok(())
+            pub const E_9: u64 = 1_000_000_000;
+            let secs = (timestamp_as_nanos / E_9) as i64;
+            let nanos = (timestamp_as_nanos % E_9) as u32;
+            let datetime = chrono::DateTime::<chrono::Utc>::from_utc(
+                chrono::NaiveDateTime::from_timestamp_opt(secs, nanos ).expect("Cannot create datetime"), 
+                chrono::Utc);
+
+            // This String allocation should be avoided but I can't find a way to format directly into a buffer from the chrono api
+            let formatted_date = datetime.to_rfc3339();
+
+            self.write_header_value( &formatted_date )
+        }
+
+        #[cfg(not(feature = "chrono"))]
+        {
+            self.write_header_value( timestamp_as_nanos )
         }
     }
 
