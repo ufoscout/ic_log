@@ -1,11 +1,11 @@
 [package]
-name = "env_logger"
+name = "ic_log"
 version = "0.1.0"
 description = """
 A logging implementation for `log` in IC
 """
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/rust-cli/env_logger/"
+repository = "https://github.com/rust-cli/ic_log/"
 categories = ["development-tools::debugging"]
 keywords = ["logging", "log", "logger", "internet-computer"]
 edition = "2021"

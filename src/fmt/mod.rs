@@ -15,7 +15,7 @@
 //! ```
 //! use std::io::Write;
 //!
-//! let mut builder = env_logger::Builder::new();
+//! let mut builder = ic_log::Builder::new();
 //!
 //! builder.format(|buf, record| {
 //!     writeln!(buf, "{}: {}",
@@ -79,12 +79,12 @@ impl Default for TimestampPrecision {
 /// # Examples
 ///
 /// Use the [`writeln`] macro to format a log record.
-/// An instance of a `Formatter` is passed to an `env_logger` format as `buf`:
+/// An instance of a `Formatter` is passed to an `ic_log` format as `buf`:
 ///
 /// ```
 /// use std::io::Write;
 ///
-/// let mut builder = env_logger::Builder::new();
+/// let mut builder = ic_log::Builder::new();
 ///
 /// builder.format(|buf, record| writeln!(buf, "{}: {}", record.level(), record.args()));
 /// ```

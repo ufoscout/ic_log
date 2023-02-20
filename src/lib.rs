@@ -46,7 +46,7 @@ pub struct Logger {
 /// ```
 /// # #[macro_use] extern crate log;
 /// # use std::io::Write;
-/// use env_logger::Builder;
+/// use ic_log::Builder;
 /// use log::LevelFilter;
 ///
 /// let mut builder = Builder::new();
@@ -80,7 +80,7 @@ impl Builder {
     ///
     /// ```
     /// use log::LevelFilter;
-    /// use env_logger::Builder;
+    /// use ic_log::Builder;
     ///
     /// let mut builder = Builder::new();
     ///
@@ -103,7 +103,7 @@ impl Builder {
     /// The format function is expected to output the string directly to the
     /// `Formatter` so that implementations can use the [`std::fmt`] macros
     /// to format and output without intermediate heap allocations. The default
-    /// `env_logger` formatter takes advantage of this.
+    /// `ic_log` formatter takes advantage of this.
     ///
     /// # Examples
     ///
@@ -111,7 +111,7 @@ impl Builder {
     ///
     /// ```
     /// use std::io::Write;
-    /// use env_logger::Builder;
+    /// use ic_log::Builder;
     ///
     /// let mut builder = Builder::new();
     ///
@@ -201,7 +201,7 @@ impl Builder {
     /// Only include messages for info and above for logs in `path::to::module`:
     ///
     /// ```
-    /// use env_logger::Builder;
+    /// use ic_log::Builder;
     /// use log::LevelFilter;
     ///
     /// let mut builder = Builder::new();
@@ -220,7 +220,7 @@ impl Builder {
     /// Only include messages for info and above for logs globally:
     ///
     /// ```
-    /// use env_logger::Builder;
+    /// use ic_log::Builder;
     /// use log::LevelFilter;
     ///
     /// let mut builder = Builder::new();
@@ -242,7 +242,7 @@ impl Builder {
     /// Only include messages for info and above for logs in `path::to::module`:
     ///
     /// ```
-    /// use env_logger::Builder;
+    /// use ic_log::Builder;
     /// use log::LevelFilter;
     ///
     /// let mut builder = Builder::new();
@@ -275,7 +275,7 @@ impl Builder {
     /// Write log message to `stdout`:
     ///
     /// ```
-    /// use env_logger::{Builder, Target};
+    /// use ic_log::{Builder, Target};
     ///
     /// let mut builder = Builder::new();
     ///
@@ -283,15 +283,6 @@ impl Builder {
     /// ```
     pub fn target(&mut self, target: fmt::Target) -> &mut Self {
         self.writer.target(target);
-        self
-    }
-
-    /// Sets whether or not the logger will be used in unit tests.
-    ///
-    /// If `is_test` is `true` then the logger will allow the testing framework to
-    /// capture log records rather than printing them to the terminal directly.
-    pub fn is_test(&mut self, is_test: bool) -> &mut Self {
-        self.writer.is_test(is_test);
         self
     }
 

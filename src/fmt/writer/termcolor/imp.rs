@@ -11,13 +11,13 @@ pub(in crate::fmt::writer) struct BufferWriter {
 pub(in crate::fmt) struct Buffer(Vec<u8>);
 
 impl BufferWriter {
-    pub(in crate::fmt::writer) fn stderr(_is_test: bool) -> Self {
+    pub(in crate::fmt::writer) fn stderr() -> Self {
         BufferWriter {
             target: WritableTarget::Stderr,
         }
     }
 
-    pub(in crate::fmt::writer) fn stdout(_is_test: bool) -> Self {
+    pub(in crate::fmt::writer) fn stdout() -> Self {
         BufferWriter {
             target: WritableTarget::Stdout,
         }

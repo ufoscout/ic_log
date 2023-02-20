@@ -97,7 +97,6 @@ impl Writer {
 #[derive(Debug)]
 pub(crate) struct Builder {
     target: WritableTarget,
-    is_test: bool,
     built: bool,
 }
 
@@ -106,7 +105,6 @@ impl Builder {
     pub(crate) fn new() -> Self {
         Builder {
             target: Default::default(),
-            is_test: false,
             built: false,
         }
     }
@@ -117,21 +115,14 @@ impl Builder {
         self
     }
 
-    /// Whether or not to capture logs for `cargo test`.
-    #[allow(clippy::wrong_self_convention)]
-    pub(crate) fn is_test(&mut self, is_test: bool) -> &mut Self {
-        self.is_test = is_test;
-        self
-    }
-
     /// Build a terminal writer.
     pub(crate) fn build(&mut self) -> Writer {
         assert!(!self.built, "attempt to re-use consumed builder");
         self.built = true;
 
         let writer = match mem::take(&mut self.target) {
-            WritableTarget::Stderr => BufferWriter::stderr(self.is_test),
-            WritableTarget::Stdout => BufferWriter::stdout(self.is_test),
+            WritableTarget::Stderr => BufferWriter::stderr(),
+            WritableTarget::Stdout => BufferWriter::stdout(),
         };
 
         Writer {
