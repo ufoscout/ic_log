@@ -17,8 +17,8 @@ ic-cdk = "0.7.0"
 
 # Enables rfc3339 time format in logs
 # Without this, timestamps will be printed as timestamp in nanoseconds
-chrono = { version = "0.4", default-features = false, features = ["std"], optional = true }
+humantime = { version = "2", default-features = false, optional = true }
 
 [features]
-default = ["chrono"]
-chrono = ["dep:chrono"]
+default = ["humantime"]
+humantime = ["dep:humantime"]

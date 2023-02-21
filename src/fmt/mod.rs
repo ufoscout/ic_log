@@ -35,11 +35,10 @@ use std::io::prelude::*;
 use std::rc::Rc;
 use std::{fmt, io, mem};
 
+mod humantime;
 use log::Record;
 
 pub(crate) mod writer;
-
-use crate::platform;
 
 use self::writer::{Buffer, Writer};
 
@@ -257,27 +256,8 @@ impl<'a> DefaultFormat<'a> {
         if self.timestamp.is_none() {
             return Ok(())
         }
+        self.write_header_value(self.buf.timestamp_nanos())
 
-        let timestamp_as_nanos = platform::time_secs();
-        #[cfg(feature = "chrono")]
-        {
-            pub const E_9: u64 = 1_000_000_000;
-            let secs = (timestamp_as_nanos / E_9) as i64;
-            let nanos = (timestamp_as_nanos % E_9) as u32;
-            let datetime = chrono::DateTime::<chrono::Utc>::from_utc(
-                chrono::NaiveDateTime::from_timestamp_opt(secs, nanos ).expect("Cannot create datetime"), 
-                chrono::Utc);
-
-            // This String allocation should be avoided but I can't find a way to format directly into a buffer from the chrono api
-            let formatted_date = datetime.to_rfc3339();
-
-            self.write_header_value( &formatted_date )
-        }
-
-        #[cfg(not(feature = "chrono"))]
-        {
-            self.write_header_value( timestamp_as_nanos )
-        }
     }
 
     fn write_module_path(&mut self, record: &Record) -> io::Result<()> {

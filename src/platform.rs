@@ -1,6 +1,23 @@
+use std::time::SystemTime;
+
 /// returns the timestamp in nanoseconds
 #[inline]
-pub fn time_secs() -> u64 {
+pub fn current_system_time() -> SystemTime {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        SystemTime::now()
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    {
+        let timestamp_in_nanos = ic_cdk::api::time();
+        std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_nanos(timestamp_in_nanos)
+    }
+}
+
+/// returns the timestamp in nanoseconds
+#[inline]
+pub fn current_timestamp_in_nanosecs() -> u64 {
     #[cfg(not(target_arch = "wasm32"))]
     {
         std::time::SystemTime::now()

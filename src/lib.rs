@@ -4,7 +4,7 @@ use log::{LevelFilter, Log, Metadata, Record, SetLoggerError};
 
 pub mod filter;
 pub mod fmt;
-mod platform;
+pub mod platform;
 
 use self::filter::Filter;
 use self::fmt::writer::{self, Writer};
