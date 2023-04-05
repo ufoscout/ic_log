@@ -12,7 +12,9 @@ edition = "2021"
 rust-version = "1.60.0"
 
 [dependencies]
+arc-swap = "1.6"
 log = { version = "0.4.8", features = ["std"] }
+env_logger = { version = "0.10.0", default-features = false }
 ic-cdk = "0.7.0"
 
 # Enables rfc3339 time format in logs

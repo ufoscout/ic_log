@@ -1,12 +1,13 @@
+use std::sync::Arc;
 use std::{cell::RefCell, io};
 
+use arc_swap::{ArcSwap, ArcSwapAny};
+use env_logger::filter::{Filter, self};
 use log::{LevelFilter, Log, Metadata, Record, SetLoggerError};
 
-pub mod filter;
 pub mod fmt;
 pub mod platform;
 
-use self::filter::Filter;
 use self::fmt::writer::{self, Writer};
 use self::fmt::{FormatFn, Formatter};
 
@@ -31,7 +32,7 @@ use self::fmt::{FormatFn, Formatter};
 /// [`Builder`]: struct.Builder.html
 pub struct Logger {
     writer: Writer,
-    filter: Filter,
+    filter: Arc<ArcSwapAny<Arc<Filter>>>,
     format: FormatFn,
 }
 
@@ -245,17 +246,13 @@ impl Builder {
     ///
     /// This function will fail if it is called more than once, or if another
     /// library has already initialized a global logger.
-    pub fn try_init(&mut self) -> Result<(), SetLoggerError> {
-        let logger = self.build();
+    pub fn try_init(&mut self) -> Result<LoggerConfig, SetLoggerError> {
+        let (logger, filter) = self.build();
 
         let max_level = logger.filter();
-        let r = log::set_boxed_logger(Box::new(logger));
-
-        if r.is_ok() {
-            log::set_max_level(max_level);
-        }
-
-        r
+        log::set_boxed_logger(Box::new(logger))?;
+        log::set_max_level(max_level);
+        Ok(filter)
     }
 
     /// Initializes the global logger with the built env logger.
@@ -276,16 +273,34 @@ impl Builder {
     ///
     /// The returned logger implements the `Log` trait and can be installed manually
     /// or nested within another logger.
-    pub fn build(&mut self) -> Logger {
+    pub fn build(&mut self) -> (Logger, LoggerConfig) {
         assert!(!self.built, "attempt to re-use consumed builder");
         self.built = true;
 
-        Logger {
+        let filter = Arc::new(ArcSwap::from_pointee(self.filter.build()));
+
+        (Logger {
             writer: self.writer.build(),
-            filter: self.filter.build(),
+            filter: filter.clone(),
             format: self.format.build(),
-        }
+        }, LoggerConfig { filter })
     }
+}
+
+pub struct LoggerConfig {
+    filter: Arc<ArcSwapAny<Arc<Filter>>>
+}
+
+impl LoggerConfig {
+
+    // Updates the logger filter
+    pub fn update_filters(&self, filters: &str) {
+        let new_filter = filter::Builder::default().parse(filters).build();
+        let max_level = new_filter.filter();
+        self.filter.swap(Arc::new(new_filter));
+        log::set_max_level(max_level);
+    }
+
 }
 
 impl Logger {
@@ -293,18 +308,18 @@ impl Logger {
     /// Returns the maximum `LevelFilter` that this env logger instance is
     /// configured to output.
     pub fn filter(&self) -> LevelFilter {
-        self.filter.filter()
+        self.filter.load().filter()
     }
 
     /// Checks if this record matches the configured filter.
     pub fn matches(&self, record: &Record) -> bool {
-        self.filter.matches(record)
+        self.filter.load().matches(record)
     }
 }
 
 impl Log for Logger {
     fn enabled(&self, metadata: &Metadata) -> bool {
-        self.filter.enabled(metadata)
+        self.filter.load().enabled(metadata)
     }
 
     fn log(&self, record: &Record) {
@@ -397,14 +412,27 @@ mod std_fmt_impls {
 #[cfg(test)]
 mod tests {
 
-    use log::info;
+    use log::*;
 
     use super::*;
 
     #[test]
-    fn filter_info() {
-        Builder::default().filter_level(LevelFilter::Debug).try_init().unwrap();
-        info!("hello from ic")
+    fn update_filter_at_runtime() {
+        let config = Builder::default().filter_level(LevelFilter::Debug).try_init().unwrap();
+        
+        debug!("This one should be printed");
+        info!("This one should be printed");
+
+        config.update_filters("error");
+
+        debug!("This one should NOT be printed");
+        info!("This one should NOT be printed");
+
+        config.update_filters("info");
+
+        debug!("This one should NOT be printed");
+        info!("This one should be printed");
+
     }
 
 }
